@@ -1,0 +1,4 @@
+
+# SifAgent routes
+_sif_agent:
+    resource: "@SifAgentBundle/Resources/config/routing.yml"
