@@ -11,6 +11,9 @@ use Symfony\Component\Config\FileLocator;
 
 class HomeController extends Controller
 {
+  // SimpleXML response for our environment
+  protected $environment;
+
   /**
    * @Template()
    */
@@ -51,6 +54,9 @@ class HomeController extends Controller
     $response_environment = $request->send();
     $environment = $response_environment->xml();
 
+    // Save to the controller
+    $this->environment = $environment;
+
     // @TODO: Better handling?
     if ($response_environment->isSuccessful()){
       $status = "Connected to " . BASE_URL;
@@ -60,13 +66,9 @@ class HomeController extends Controller
 
     // Get Session Token
     $sessionToken = $environment->sessionToken;
-    print "OK! Got sessionToken! $sessionToken \n";
 
     // Generate new Authentication Token
     $authorizationKey = "Basic " . base64_encode($sessionToken . ':' . SECRET);
-
-    print "New Auth Token: $authorizationKey \n";
-
     $client->setConfig(array('request.options' => array(
         'headers' => array(
           'Authorization' => $authorizationKey,
@@ -81,13 +83,44 @@ class HomeController extends Controller
     $zones = $response->json();
 
     foreach ($zones['zone'] as $zone){
-      $name = $zone['id'];
-      print "Zone Found! $name\n";
+
+      if ($zone['id'] == $environment->defaultZoneId){
+        $zone_list[] = $zone['id'] . ' (default)';
+      } else {
+        $zone_list[] = $zone['id'];
+      }
     }
+
+    // Get Students
+    $request = $client->get('/api/students', array());
+    $response = $request->send();
+    $students = $response->json();
+    foreach ($students['student'] as $student){
+      $student_list[$student['refId']] = $student['name']['nameOfRecord']['fullName'];
+    }
+    //
+    //  if ($zone['id'] == $environment->defaultZoneId){
+    //    $zone_list[] = $zone['id'] . ' (default)';
+    //  } else {
+    //    $zone_list[] = $zone['id'];
+    //  }
+    //}
 
     return array(
       'status' => $status,
-      'environment' => 'test'.$response_environment->getBody(),
+      'environment' => $this->environmentXML(),
+      'description' => 'This app has connected to the ZIS server and granted our application access.',
+      'zone_list' => $zone_list,
+      'student_list' => $student_list,
+      'default_zone' => $environment->defaultZoneId,
+      'token' => TOKEN,
+
     );
+  }
+
+  public function environmentXML(){
+    $dom = dom_import_simplexml($this->environment)->ownerDocument;
+    $dom->formatOutput = true;
+    return $dom->saveXML();
   }
 }
