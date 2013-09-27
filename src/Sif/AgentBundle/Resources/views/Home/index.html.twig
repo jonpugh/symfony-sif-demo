@@ -16,6 +16,7 @@
   </ul>
 
   <h3>Available Students</h3>
+  <p>{{student_count}} students found.</p>
   <ul>
     {% for student in student_list %}
     <li><a href='student/{{student.id}}'>{{ student.name }}</a></li>
