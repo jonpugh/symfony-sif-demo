@@ -4,5 +4,25 @@
 {% block content %}
    <h1>SIF Agent</h1>
    <h2>{{status}}</h2>
-   <textarea>{{environment}}</textarea>
+
+   <p>Connection for token "{{token}}" has been accepted.</p>
+
+  <h3>Available Zones</h3>
+  <ul>
+    {% for zone in zone_list %}
+    <li>{{ zone|e}}</li>
+    {% endfor %}
+  </ul>
+
+  <h3>Available Students</h3>
+  <ul>
+    {% for student in student_list %}
+    <li>{{ student }}</li>
+    {% endfor %}
+  </ul>
+
+   <h3>Environment XML</h3>
+   <pre>{{environment}}</pre>
+
+
 {% endblock %}
