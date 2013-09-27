@@ -83,11 +83,16 @@ class HomeController extends Controller
     $zones = $response->json();
 
     foreach ($zones['zone'] as $zone){
-
       if ($zone['id'] == $environment->defaultZoneId){
-        $zone_list[] = $zone['id'] . ' (default)';
+        $zone_list[] = array(
+          'id' => $zone['id'],
+          'name' => $zone['id'] . ' (default)',
+        );
       } else {
-        $zone_list[] = $zone['id'];
+        $zone_list[] = array(
+          'id' => $zone['id'],
+          'name' => $zone['id'],
+        );
       }
     }
 
@@ -116,7 +121,7 @@ class HomeController extends Controller
       'zone_list' => $zone_list,
       'student_list' => $student_list,
       'default_zone' => $environment->defaultZoneId,
-      'token' => TOKEN,
+      'token' => $authorizationKey,
 
     );
   }

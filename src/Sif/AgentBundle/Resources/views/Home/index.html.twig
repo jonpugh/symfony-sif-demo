@@ -5,12 +5,13 @@
    <h1>SIF Agent</h1>
    <h2>{{status}}</h2>
 
-   <p>Connection for token "{{token}}" has been accepted.</p>
+  <h3>Current Authorization Token</h3>
+   <p>{{token}}</p>
 
   <h3>Available Zones</h3>
   <ul>
     {% for zone in zone_list %}
-    <li>{{ zone|e}}</li>
+    <li><a href='zone/{{zone.id}}'>{{ zone.name }}</a></li>
     {% endfor %}
   </ul>
 
