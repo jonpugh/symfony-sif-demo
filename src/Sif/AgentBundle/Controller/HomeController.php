@@ -96,7 +96,10 @@ class HomeController extends Controller
     $response = $request->send();
     $students = $response->json();
     foreach ($students['student'] as $student){
-      $student_list[$student['refId']] = $student['name']['nameOfRecord']['fullName'];
+      $student_list[] = array(
+        'name' => $student['name']['nameOfRecord']['fullName'],
+        'id' => $student['refId'],
+      );
     }
     //
     //  if ($zone['id'] == $environment->defaultZoneId){

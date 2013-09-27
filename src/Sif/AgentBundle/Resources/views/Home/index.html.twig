@@ -17,7 +17,7 @@
   <h3>Available Students</h3>
   <ul>
     {% for student in student_list %}
-    <li>{{ student }}</li>
+    <li><a href='student/{{student.id}}'>{{ student.name }}</a></li>
     {% endfor %}
   </ul>
 
