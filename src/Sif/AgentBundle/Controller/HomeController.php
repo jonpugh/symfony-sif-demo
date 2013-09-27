@@ -120,6 +120,7 @@ class HomeController extends Controller
       'description' => 'This app has connected to the ZIS server and granted our application access.',
       'zone_list' => $zone_list,
       'student_list' => $student_list,
+      'student_count' => count($student_list),
       'default_zone' => $environment->defaultZoneId,
       'token' => $authorizationKey,
 
