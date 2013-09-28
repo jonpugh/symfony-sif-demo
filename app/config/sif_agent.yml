@@ -1,0 +1,4 @@
+services:
+    sif_agent:
+        class:        Sif\AgentBundle\SifClient
+        arguments:    [default]

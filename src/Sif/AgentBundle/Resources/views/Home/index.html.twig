@@ -11,7 +11,11 @@
   <h3>Available Zones</h3>
   <ul>
     {% for zone in zone_list %}
-    <li><a href='zone/{{zone.id}}'>{{ zone.name }}</a></li>
+    <li><a href='zone/{{zone.id}}'>{{ zone.id }}</a> {{zone.description}}
+      {% if zone.default %}
+      <em>{{zone.default}}</em>
+      {% endif %}
+    </li>
     {% endfor %}
   </ul>
 

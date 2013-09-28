@@ -1,4 +1,5 @@
 imports:
+    - { resource: sif_agent.yml }
     - { resource: parameters.yml }
     - { resource: security.yml }
 
