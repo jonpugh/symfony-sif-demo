@@ -6,3 +6,7 @@ _home:
 _zone:
     pattern:  /zone/{zoneId}
     defaults: { _controller: SifAgentBundle:Zone:get }
+    
+_student:
+    pattern:  /student/{studentId}
+    defaults: { _controller: SifAgentBundle:Student:get }
