@@ -81,10 +81,10 @@ class SifClient extends Client {
     }
 
      // Generate new Authentication Token
-    $authorizationKey = "Basic " . base64_encode($environment->sessionToken . ':' . $secret);
+    $this->key = "Basic " . base64_encode($environment->sessionToken . ':' . $secret);
     $this->setConfig(array('request.options' => array(
         'headers' => array(
-          'Authorization' => $authorizationKey,
+          'Authorization' => $this->key,
         ),
     )));
   }
