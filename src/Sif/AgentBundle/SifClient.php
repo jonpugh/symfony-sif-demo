@@ -1,21 +1,19 @@
 <?php
 /**
  * @file
- * Definition of Sif\AgentBundle\Client
+ * Definition of Sif\AgentBundle\SifClient
  */
 
 namespace Sif\AgentBundle;
 
 use Guzzle\Http\Client;
+use Symfony\Component\HttpFoundation\Session\Session;
 
 class SifClient extends Client {
-
   /**
-   * The connection information for this client object.
-   *
-   * @var array
+   * REST server base URL
    */
-  protected $connectionOptions = array();
+  public $baseUrl = 'http://rest3api.sifassociation.org';
 
   /**
    * The SIF "Environment" for this application.
@@ -30,65 +28,108 @@ class SifClient extends Client {
   /**
    * Readable status string.
    */
-  /**
-   * The SIF "Environment" for this application.
-   */
   public $status = '';
 
   /**
    * Constructs a Client object.
    */
   public function __construct() {
+    // Check for an existing authorization token for this session.
+    $session = new Session();
+
+    $this->key = $session->get('key');
+    $this->environmentXml = $session->get('environment');
+
+    if (empty($this->key)){
+      print "Key not found.  Initializing authorization.";
+      // getAuth() initiates the Guzzle Client...
+      $this->getAuth();
+    } else {
+
+      // Initiate the Guzzle Client
+      print "Key Found! " . $this->key;
+      parent::__construct($this->baseUrl, array(
+        'request.options' => array(
+          'headers' => array(
+            'Authorization' => $this->key,
+            'Accept' => 'application/json',
+            'Content-Type' => 'application/json',
+          ),
+        ),
+      ));
+    }
+  }
+
+  /**
+   * Connects and gets a proper authorization key.
+   */
+  private function getAuth(){
+    $session = new Session();
 
     // @TODO: Implement config for this.
     $token = 'new';
     $secret = 'guest';
-    $baseUrl = 'http://rest3api.sifassociation.org';
 
-    // Generate our Authorization Key
-    $this->key = "Basic " . base64_encode($token . ':' . $secret);
+    // Generate our pre Authorization Key
+    $pre_key = "Basic " . base64_encode($token . ':' . $secret);
 
     // Initiate the Guzzle Client
-    parent::__construct($baseUrl, array(
+    parent::__construct($this->baseUrl, array(
       'request.options' => array(
         'headers' => array(
-          'Authorization' => $this->key,
+          'Authorization' => $pre_key,
           'Accept' => 'application/xml',
           'Content-Type' => 'application/xml',
         ),
       ),
     ));
 
-    // Create our environment
-    // @TODO: Only do this if we don't have the final auth token.
-    $xml = file_get_contents(__DIR__ . '/Resources/data/environment.xml');
+    // POST our environment
+    $xml = "<environment>
+  <solutionId>testSolution</solutionId>
+  <authenticationMethod>Basic</authenticationMethod>
+  <instanceId></instanceId>
+  <userToken></userToken>
+  <consumerName>Guzzle</consumerName>
+  <applicationInfo>
+    <applicationKey>Basic bmV3Omd1ZXN0Cg==</applicationKey>
+    <supportedInfrastructureVersion>3.0</supportedInfrastructureVersion>
+    <supportedDataModel>SIF-US</supportedDataModel>
+    <supportedDataModelVersion>3.0</supportedDataModelVersion>
+    <transport>REST</transport>
+    <applicationProduct>
+      <vendorName>Guzzle</vendorName>
+      <productName>Guzzle</productName>
+      <productVersion>Guzzle</productVersion>
+    </applicationProduct>
+  </applicationInfo>
+</environment>
+";
     $request = $this->post('/api/environments/environment', array(), $xml);
-
-    // Send the POST to create the environment
     $response = $request->send();
-    $environment = $response->xml();
+    $environment = $this->environment = $response->xml();
 
-    // Save to the SifClient
-    $this->environment = $environment;
+    // Save to this SifClient and the session
     $this->environmentXml = $this->cleanXml($environment);
 
-
-    // @TODO: Better handling?
-    if ($response->isSuccessful()){
-      $this->status = "Connected to " . $baseUrl;
-    } else {
-      $this->status = "Unable to connect to " . $baseUrl;
-    }
-
-     // Generate new Authentication Token
+    // Generate new Authentication Token...
     $this->key = "Basic " . base64_encode($environment->sessionToken . ':' . $secret);
+
+    // Save as guzzle config so future requests use this key.
     $this->setConfig(array('request.options' => array(
-        'headers' => array(
-          'Authorization' => $this->key,
-        ),
+      'headers' => array(
+        'Authorization' => $this->key,
+      ),
     )));
+
+    // Save token to session.
+    $session->set('key', $this->key);
+    $session->set('environment', $this->environmentXml);
   }
 
+  /**
+   * Helper to get human readable XML
+   */
   public function cleanXml($simpleXml){
     $dom = dom_import_simplexml($simpleXml)->ownerDocument;
     $dom->formatOutput = true;
