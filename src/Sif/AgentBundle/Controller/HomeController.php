@@ -22,7 +22,9 @@ class HomeController extends Controller
     // Get Students
     $request = $client->get('/api/students', array());
     $response = $request->send();
+
     $students = $response->json();
+
     foreach ($students['student'] as $student){
       $student_list[] = array(
         'name' => $student['name']['nameOfRecord']['fullName'],
@@ -36,7 +38,7 @@ class HomeController extends Controller
     $zones = $response->json();
     foreach ($zones['zone'] as $zone){
       $zone['default'] = '';
-      if ($zone['id'] == $client->environment->defaultZoneId){
+      if ($zone['id'] == $client->zone){
         $zone['default'] = 'Default';
       }
       $zone_list[] = $zone;
@@ -49,7 +51,7 @@ class HomeController extends Controller
       'zone_list' => $zone_list,
       'student_list' => $student_list,
       'student_count' => count($student_list),
-      'default_zone' => $client->environment->defaultZoneId,
+      'zone' => $client->zone,
       'token' => $client->key,
     );
   }
