@@ -40,14 +40,15 @@ class SifClient extends Client {
     $this->key = $session->get('key');
     $this->environmentXml = $session->get('environment');
 
+    // If we don't have a key yet, getAuth()
     if (empty($this->key)){
-      print "Key not found.  Initializing authorization.";
       // getAuth() initiates the Guzzle Client...
       $this->getAuth();
-    } else {
+    }
+    // Otherwise, just initiate the Guzzle client.
+    else {
 
       // Initiate the Guzzle Client
-      print "Key Found! " . $this->key;
       parent::__construct($this->baseUrl, array(
         'request.options' => array(
           'headers' => array(
