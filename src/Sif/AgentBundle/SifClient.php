@@ -16,9 +16,11 @@ class SifClient extends Client {
   public $baseUrl = 'http://rest3api.sifassociation.org';
 
   /**
-   * The SIF "Environment" for this application.
+   * The SIF "Environment" for this application, and a readable XML
+   * string.
    */
   public $environment;
+  public $environmentXml;
 
   /**
    * The SIF REST server Authorization Key
@@ -31,6 +33,11 @@ class SifClient extends Client {
   public $status = '';
 
   /**
+   * Current/Default Zone.
+   */
+  public $zone = '';
+
+  /**
    * Constructs a Client object.
    */
   public function __construct() {
@@ -38,6 +45,7 @@ class SifClient extends Client {
     $session = new Session();
 
     $this->key = $session->get('key');
+    $this->zone = $session->get('zone');
     $this->environmentXml = $session->get('environment');
 
     // If we don't have a key yet, getAuth()
@@ -112,6 +120,7 @@ class SifClient extends Client {
 
     // Save to this SifClient and the session
     $this->environmentXml = $this->cleanXml($environment);
+    $this->zone = $this->environment->defaultZoneId;
 
     // Generate new Authentication Token...
     $this->key = "Basic " . base64_encode($environment->sessionToken . ':' . $secret);
@@ -126,6 +135,7 @@ class SifClient extends Client {
     // Save token to session.
     $session->set('key', $this->key);
     $session->set('environment', $this->environmentXml);
+    $session->set('zone', $this->environment->defaultZoneId);
   }
 
   /**
