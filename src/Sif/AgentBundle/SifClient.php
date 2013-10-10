@@ -7,7 +7,7 @@
 namespace Sif\AgentBundle;
 
 use Guzzle\Http\Client;
-use Symfony\Component\HttpFoundation\Session\Session;
+//use Symfony\Component\HttpFoundation\Session\Session;
 
 class SifClient extends Client {
   /**
@@ -25,7 +25,7 @@ class SifClient extends Client {
   /**
    * The SIF REST server Authorization Key
    */
-  public $key;
+  public $key = '';
 
   /**
    * Readable status string.
@@ -42,48 +42,40 @@ class SifClient extends Client {
    */
   public function __construct() {
     // Check for an existing authorization token for this session.
-    $session = new Session();
+    //$this->key = $session->get('key');
+    //$this->zone = $session->get('zone');
+    //$this->environmentXml = $session->get('environment');
 
-    $this->key = $session->get('key');
-    $this->zone = $session->get('zone');
-    $this->environmentXml = $session->get('environment');
-
-    // If we don't have a key yet, getAuth()
+    // If we don't have a key yet, getKey()
     if (empty($this->key)){
-      // getAuth() initiates the Guzzle Client...
-      $this->getAuth();
+      $this->getKey();
     }
-    // Otherwise, just initiate the Guzzle client.
-    else {
 
-      // Initiate the Guzzle Client
-      parent::__construct($this->baseUrl, array(
-        'request.options' => array(
-          'headers' => array(
-            'Authorization' => $this->key,
-            'Accept' => 'application/json',
-            'Content-Type' => 'application/json',
-          ),
+    // Then, just initiate the Guzzle client.
+    parent::__construct($this->baseUrl, array(
+      'request.options' => array(
+        'headers' => array(
+          'Authorization' => $this->key,
+          'Accept' => 'application/json',
+          'Content-Type' => 'application/json',
         ),
-      ));
-    }
+      ),
+    ));
   }
 
   /**
    * Connects and gets a proper authorization key.
+   * NOT RESPONSIBLE FOR SAVING THE KEY.
    */
-  private function getAuth(){
-    $session = new Session();
-
+  private function getKey(){
     // @TODO: Implement config for this.
     $token = 'new';
     $secret = 'guest';
 
-    // Generate our pre Authorization Key
+    // Generate our pre Authorization Key and submit our environment
+    // using a NEW guzzle client.
     $pre_key = "Basic " . base64_encode($token . ':' . $secret);
-
-    // Initiate the Guzzle Client
-    parent::__construct($this->baseUrl, array(
+    $client = new Client($this->baseUrl, array(
       'request.options' => array(
         'headers' => array(
           'Authorization' => $pre_key,
@@ -114,28 +106,28 @@ class SifClient extends Client {
   </applicationInfo>
 </environment>
 ";
-    $request = $this->post('/api/environments/environment', array(), $xml);
+    $request = $client->post('/api/environments/environment', array(), $xml);
     $response = $request->send();
-    $environment = $this->environment = $response->xml();
 
     // Save to this SifClient and the session
-    $this->environmentXml = $this->cleanXml($environment);
+    $this->environment = $response->xml();
+    $this->environmentXml = $this->cleanXml($this->environment);
     $this->zone = $this->environment->defaultZoneId;
 
     // Generate new Authentication Token...
-    $this->key = "Basic " . base64_encode($environment->sessionToken . ':' . $secret);
+    $this->key = "Basic " . base64_encode($this->environment->sessionToken . ':' . $secret);
 
-    // Save as guzzle config so future requests use this key.
-    $this->setConfig(array('request.options' => array(
-      'headers' => array(
-        'Authorization' => $this->key,
-      ),
-    )));
+    //// Save as guzzle config so future requests use this key.
+    //$this->setConfig(array('request.options' => array(
+    //  'headers' => array(
+    //    'Authorization' => $this->key,
+    //  ),
+    //)));
 
-    // Save token to session.
-    $session->set('key', $this->key);
-    $session->set('environment', $this->environmentXml);
-    $session->set('zone', $this->environment->defaultZoneId);
+    //// Save token to session.
+    //$session->set('key', $this->key);
+    //$session->set('environment', $this->environmentXml);
+    //$session->set('zone', $this->environment->defaultZoneId);
   }
 
   /**
